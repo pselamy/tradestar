@@ -16,7 +16,7 @@ load("@contrib_rules_jvm//:repositories.bzl", "contrib_rules_jvm_deps")
 
 contrib_rules_jvm_deps()
 
-load("@contrib_rules_jvm//:repositories.bzl", "contrib_rules_jvm_deps")
+load("@contrib_rules_jvm//:setup.bzl", "contrib_rules_jvm_setup")
 
 contrib_rules_jvm_setup()
 
