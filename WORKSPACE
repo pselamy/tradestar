@@ -14,6 +14,10 @@ git_repository(
 
 load("@contrib_rules_jvm//:repositories.bzl", "contrib_rules_jvm_deps")
 
+contrib_rules_jvm_deps()
+
+load("@contrib_rules_jvm//:repositories.bzl", "contrib_rules_jvm_deps")
+
 contrib_rules_jvm_setup()
 
 git_repository(
