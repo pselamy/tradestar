@@ -41,9 +41,9 @@ maven_install(
     ],
 )
 
-######################
+##########################
 #### PROTOBUF SUPPORT ####
-######################
+##########################
 git_repository(
     name = "rules_proto",
     commit = "3212323502e21b819ac4fbdd455cb227ad0f6394",
