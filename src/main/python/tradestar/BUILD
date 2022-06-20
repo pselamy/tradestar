@@ -8,5 +8,6 @@ py_binary(
     srcs = ["candle_aggregation_pipeline.py"],
     deps = [
         requirement("apache-beam"),
+        requirement("tiingo"),
     ],
 )

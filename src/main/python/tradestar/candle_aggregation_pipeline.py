@@ -1,4 +1,5 @@
 import apache_beam as beam
+import tiingo
 from apache_beam.options import pipeline_options
 
 
