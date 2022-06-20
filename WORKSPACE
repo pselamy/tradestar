@@ -56,3 +56,37 @@ load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_
 rules_proto_dependencies()
 
 rules_proto_toolchains()
+
+########################
+#### PYTHON SUPPORT ####
+########################
+git_repository(
+    name = "rules_python",
+    commit = "4c961d92a15f4a3f90faab82eecb18d91ee2ccbe",
+    remote = "https://github.com/bazelbuild/rules_python",
+    shallow_since = "1649153521 +0200",
+)
+
+load("@rules_python//python:repositories.bzl", "python_register_toolchains")
+
+python_register_toolchains(
+    name = "python3_9",
+    # Available versions are listed in @rules_python//python:versions.bzl.
+    # We recommend using the same version your team is already standardized on.
+    python_version = "3.9",
+)
+
+load("@python3_9//:defs.bzl", "interpreter")
+load("@rules_python//python:pip.bzl", "pip_parse")
+
+pip_parse(
+    name = "pip_deps",
+    python_interpreter_target = interpreter,
+    requirements_lock = "//:requirements_lock.txt",
+)
+
+# Load the starlark macro which will define your dependencies.
+load("@pip_deps//:requirements.bzl", "install_deps")
+
+# Call it to define repos for your requirements.
+install_deps()
