@@ -90,3 +90,13 @@ load("@pip_deps//:requirements.bzl", "install_deps")
 
 # Call it to define repos for your requirements.
 install_deps()
+
+##########################
+##### CORE LIBRARIES #####
+##########################
+git_repository(
+    name = "tradestar_protos",
+    commit = "835a65045f1fc3353ec4c8035cd8aab8d8c36067",
+    remote = "https://github.com/pselamy/tradestar-protos",
+    shallow_since = "1645497038 -0600",
+)
