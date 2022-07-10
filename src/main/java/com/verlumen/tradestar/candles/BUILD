@@ -27,6 +27,7 @@ java_library(
         "@maven//:joda_time_joda_time",
         "@maven//:org_apache_beam_beam_sdks_java_core",
         "@maven//:org_apache_beam_beam_sdks_java_extensions_protobuf",
+        "@tradestar_core//src/main/java/com/verlumen/tradestar/core/candles:granularity_spec",
         "@tradestar_protos//:candles_java_proto",
         "@tradestar_protos//:trading_java_proto",
     ],
