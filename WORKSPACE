@@ -99,6 +99,14 @@ install_deps()
 ##########################
 ##### CORE LIBRARIES #####
 ##########################
+
+git_repository(
+    name = "tradestar_core",
+    commit = "4095ab8ddc32fab9788a3fd2c23c8c6336513ed3",
+    remote = "https://github.com/pselamy/tradestar_core",
+    shallow_since = "1657475286 -0400",
+)
+
 git_repository(
     name = "tradestar_protos",
     commit = "99ab9fdef3ccf2fe1638de8f8110beb848e72afb",
