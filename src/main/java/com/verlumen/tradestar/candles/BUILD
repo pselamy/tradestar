@@ -24,6 +24,7 @@ java_library(
     ],
     deps = [
         ":candle_aggregation_pipeline",
+        "@maven//:com_google_guava_guava",
         "@maven//:com_google_mug_mug",
         "@maven//:joda_time_joda_time",
         "@maven//:org_apache_beam_beam_sdks_java_core",
