@@ -23,7 +23,7 @@ java_library(
         "CandleAggregatorImpl.java",
     ],
     deps = [
-        ":candle_aggregation_pipeline",
+        ":candle_aggregator",
         "//:autovalue",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
