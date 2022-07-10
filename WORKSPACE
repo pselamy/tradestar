@@ -34,6 +34,7 @@ maven_install(
         "com.google.auto.value:auto-value-annotations:1.9",
         "com.google.guava:guava:31.1-jre",
         "com.google.inject:guice:5.1.0",
+        "joda-time:joda-time:2.10.14",
         # Apache Beam
         "org.apache.beam:beam-sdks-java-core:2.39.0",
         "org.apache.beam:beam-sdks-java-extensions-protobuf:2.39.0",
