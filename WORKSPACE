@@ -103,7 +103,7 @@ install_deps()
 git_repository(
     name = "tradestar_core",
     commit = "4095ab8ddc32fab9788a3fd2c23c8c6336513ed3",
-    remote = "https://github.com/pselamy/tradestar_core",
+    remote = "https://github.com/pselamy/tradestar-core",
     shallow_since = "1657475286 -0400",
 )
 
