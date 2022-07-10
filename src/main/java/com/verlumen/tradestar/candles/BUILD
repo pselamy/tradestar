@@ -24,6 +24,7 @@ java_library(
     ],
     deps = [
         ":candle_aggregation_pipeline",
+        "//:autovalue",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_google_mug_mug",
