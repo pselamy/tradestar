@@ -96,7 +96,7 @@ install_deps()
 ##########################
 git_repository(
     name = "tradestar_protos",
-    commit = "835a65045f1fc3353ec4c8035cd8aab8d8c36067",
+    commit = "100a1a48415a759aa483c3cb49192fb1564d6aa6",
     remote = "https://github.com/pselamy/tradestar-protos",
     shallow_since = "1645497038 -0600",
 )
