@@ -1,4 +1,4 @@
-package tradestar;
+package com.verlumen.tradestar;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptions;
