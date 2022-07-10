@@ -16,3 +16,17 @@ java_library(
         "@tradestar_protos//:trading_java_proto",
     ],
 )
+
+java_library(
+    name = "candle_aggregator_impl",
+    srcs = [
+        "CandleAggregatorImpl.java",
+    ],
+    deps = [
+        ":candle_aggregation_pipeline",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_apache_beam_beam_sdks_java_extensions_protobuf",
+        "@tradestar_protos//:candles_java_proto",
+        "@tradestar_protos//:trading_java_proto",
+    ],
+)
