@@ -36,6 +36,7 @@ maven_install(
         "com.google.inject:guice:5.1.0",
         "com.google.mug:mug:6.3",
         "joda-time:joda-time:2.10.14",
+        "org.ta4j:ta4j-core:0.14",
         # XChange
         "org.knowm.xchange:xchange-core:5.0.13",
         # Apache Beam
