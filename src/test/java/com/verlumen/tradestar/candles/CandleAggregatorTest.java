@@ -51,10 +51,25 @@ public class CandleAggregatorTest {
     AggregateResult actual = aggregator.aggregate(params);
 
     // Assert
-    assertThat(actual.candles()).isNotNull();
     EnumSet.allOf(Granularity.class).stream()
         .filter(Constants.SUPPORTED_GRANULARITIES::contains)
         .forEach(granularity -> assertThatCandlesAreAggregated(testCase, actual, granularity));
+  }
+
+  @Test
+  public void aggregate_returnsNonNullCandles(
+      @TestParameter AggregateAggregatesCandlesTestCase testCase) {
+    // Arrange
+    PCollection<ExchangeTrade> trades =
+        createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
+    FakeCandleService candleService = FakeCandleService.create(testCase.candles);
+    AggregateParams params = AggregateParams.create(candleService, trades);
+
+    // Act
+    AggregateResult actual = aggregator.aggregate(params);
+
+    // Assert
+    assertThat(actual.candles()).isNotNull();
   }
 
   private void assertThatCandlesAreAggregated(
