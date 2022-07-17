@@ -130,7 +130,10 @@ class CandleAggregatorImpl implements CandleAggregator {
 
             GranularitySpec granularitySpec = GranularitySpec.fromGranularity(granularity());
             int minutes = (int) granularitySpec.minutes();
-            checkArgument(candles.size() == minutes);
+            if (candles.size() != minutes) {
+                return;
+            }
+
             checkArgument(candles.stream()
                     .allMatch(candle -> candle.getGranularity()
                             .equals(Granularity.ONE_MINUTE)));
