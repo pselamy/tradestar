@@ -61,24 +61,20 @@ public class CandleAggregatorTest {
       AggregateAggregatesCandlesTestCase testCase,
       AggregateResult actual,
       Granularity granularity) {
-    PCollection<Candle> actualCandles =
-        actual
-            .candles()
-            .getOrDefault(
-                granularity, createPCollection(ImmutableSet.of(), ProtoCoder.of(Candle.class)));
+    PCollection<Candle> actualCandleCollection = actual.candles().get(granularity);
     ImmutableSet<Candle> expectedCandles =
         testCase.expected.getOrDefault(granularity, ImmutableSet.of());
 
-    assertThat(actualCandles).isNotNull();
-    PAssert.that(actualCandles)
+    assertThat(actualCandleCollection).isNotNull();
+    PAssert.that(actualCandleCollection)
         .satisfies(
-                actualCandles1 -> {
-              assertThat(actualCandles1)
+            actualCandles -> {
+              assertThat(actualCandles)
                   .isInStrictOrder(
                       Comparator.<Candle>comparingLong(candle -> candle.getStart().getSeconds()));
               return null;
             });
-    PAssert.that(actualCandles).containsInAnyOrder(expectedCandles);
+    PAssert.that(actualCandleCollection).containsInAnyOrder(expectedCandles);
   }
 
   private <T> PCollection<T> createPCollection(ImmutableSet<T> tList, Coder<T> tCoder) {
