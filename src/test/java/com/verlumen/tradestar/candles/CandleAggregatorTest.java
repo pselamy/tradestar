@@ -1,5 +1,6 @@
 package com.verlumen.tradestar.candles;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
@@ -116,6 +117,13 @@ public class CandleAggregatorTest {
       this.candles = candles;
       this.trades = trades;
       this.expectedException = expectedException;
+    }
+  }
+
+  @AutoValue
+  abstract static class FakeCandleService implements CandleAggregator.CandleService {
+    private static FakeCandleService create(ImmutableSet<Candle> candles) {
+      return new AutoValue_CandleAggregatorTest_FakeCandleService(candles);
     }
   }
 }
