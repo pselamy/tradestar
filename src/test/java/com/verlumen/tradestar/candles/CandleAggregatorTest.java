@@ -1,63 +1,104 @@
 package com.verlumen.tradestar.candles;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
+import com.google.mu.util.stream.BiStream;
+import com.google.testing.junit.testparameterinjector.TestParameter;
+import com.google.testing.junit.testparameterinjector.TestParameterInjector;
+import com.verlumen.tradestar.candles.CandleAggregator.AggregateParams;
+import com.verlumen.tradestar.candles.CandleAggregator.AggregateResult;
 import com.verlumen.tradestar.protos.candles.Candle;
+import com.verlumen.tradestar.protos.candles.Granularity;
 import com.verlumen.tradestar.protos.trading.ExchangeTrade;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.extensions.protobuf.ProtoCoder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.EnumSet.allOf;
-
-@RunWith(Parameterized.class)
+@RunWith(TestParameterInjector.class)
 public class CandleAggregatorTest {
-    private static final ProtoCoder<ExchangeTrade> TRADE_CODER = ProtoCoder.of(ExchangeTrade.class);
-    private final CandleAggregator aggregator;
-    private final Pipeline pipeline;
-    private final AggregateTestCase testCase;
+  private final CandleAggregator aggregator;
+  private final Pipeline pipeline;
 
-    public CandleAggregatorTest(AggregateTestCase testCase) {
-        this.aggregator = Guice.createInjector(new CandlesModule())
-                .getInstance(CandleAggregator.class);
-        this.pipeline = TestPipeline.create();
-        this.testCase = testCase;
+  @Before
+  public void setup() {
+    this.aggregator = Guice.createInjector(new CandlesModule()).getInstance(CandleAggregator.class);
+    this.pipeline = TestPipeline.create();
+  }
+
+  @Test
+  public void aggregate_aggregatesCandles(
+      @TestParameter CandleAggregatorTest.AggregateAggregatesCandlesTestCase testCase) {
+    PCollection<ExchangeTrade> trades =
+        createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
+    AggregateParams params = AggregateParams.create(testCase.candles, trades);
+    BiStream.from(testCase.expected)
+        .mapValues(candles -> createPCollection(candles, ProtoCoder.of(Candle.class)));
+    PCollection<Candle> expected =
+        pipeline.apply(Create.of(testCase.expected).withCoder(ProtoCoder.of(Candle.class)));
+
+    AggregateResult actual = aggregator.aggregate(params);
+
+    PAssert.that(actual.candles()).containsInAnyOrder(expected);
+  }
+
+  @Test
+  public void aggregate_throwsExceptions() {
+    PCollection<ExchangeTrade> trades =
+        createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
+    AggregateParams params = AggregateParams.create(testCase.candles, trades);
+    BiStream.from(testCase.expected)
+        .mapValues(candles -> createPCollection(candles, ProtoCoder.of(Candle.class)));
+    PCollection<Candle> expected =
+        pipeline.apply(Create.of(testCase.expected).withCoder(ProtoCoder.of(Candle.class)));
+
+    AggregateResult actual = aggregator.aggregate(params);
+
+    PAssert.that(actual.candles()).containsInAnyOrder(expected);
+  }
+
+  private <T> PCollection<T> createPCollection(ImmutableSet<T> tList, Coder<T> tCoder) {
+    return pipeline.apply(Create.of(tList).withCoder(tCoder));
+  }
+
+  private enum AggregateAggregatesCandlesTestCase {
+    NO_CANDLES_NO_TRADES(ImmutableSet.of(), ImmutableSet.of(), ImmutableMap.of());
+
+    private final ImmutableSet<Candle> candles;
+    private final ImmutableSet<ExchangeTrade> trades;
+    private final ImmutableMap<Granularity, ImmutableSet<Candle>> expected;
+
+    AggregateAggregatesCandlesTestCase(
+        ImmutableSet<Candle> candles,
+        ImmutableSet<ExchangeTrade> trades,
+        ImmutableMap<Granularity, ImmutableSet<Candle>> expected) {
+      this.candles = candles;
+      this.trades = trades;
+      this.expected = expected;
     }
+  }
 
-    @Parameters(name = "{0}")
-    public static Iterable<?> data() {
-        return allOf(AggregateTestCase.class).stream()
-                .map(testCase -> new Object[]{testCase})
-                .collect(toImmutableList());
+  private enum AggregateThrowsExceptionTestCase {
+    ;
+
+    private final ImmutableSet<Candle> candles;
+    private final ImmutableSet<ExchangeTrade> trades;
+    private final Exception expectedException;
+
+    AggregateThrowsExceptionTestCase(
+        ImmutableSet<Candle> candles,
+        ImmutableSet<ExchangeTrade> trades,
+        Exception expectedException) {
+      this.candles = candles;
+      this.trades = trades;
+      this.expectedException = expectedException;
     }
-
-    @Test
-    public void test() {
-        PCollection<ExchangeTrade> trades = pipeline
-                .apply(Create.of(testCase.trades).withCoder(TRADE_CODER));
-
-        PCollection<Candle> actual = aggregator.aggregate(trades);
-
-        PAssert.that(actual).containsInAnyOrder(testCase.expected);
-    }
-
-    private enum AggregateTestCase {
-        NO_TRADES(ImmutableList.of(), ImmutableList.of());
-
-        private final ImmutableList<ExchangeTrade> trades;
-        private final ImmutableList<Candle> expected;
-
-        AggregateTestCase(ImmutableList<ExchangeTrade> trades, ImmutableList<Candle> expected) {
-            this.trades = trades;
-            this.expected = expected;
-        }
-    }
+  }
 }
