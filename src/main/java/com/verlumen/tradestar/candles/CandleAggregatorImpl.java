@@ -74,7 +74,7 @@ class CandleAggregatorImpl implements CandleAggregator {
         historicalOneMinuteCandleAggregator.aggregate();
 
     PCollection<Candle> liveOneMinuteCandles =
-        applyWindow(params.trades(), window(ONE_MINUTE))
+        applyWindow(params.trades(), window(ONE_MINUTE), new TradeTimestampFn())
             .apply(ParDo.of(OneMinuteCandleFn.create(startTimeCalculator)))
             .apply(Wait.on(historicalOneMinuteCandles));
 
@@ -82,13 +82,17 @@ class CandleAggregatorImpl implements CandleAggregator {
         BiStream.from(WINDOWS)
             .mapValues(
                 (granularity, window) ->
-                    applyWindow(liveOneMinuteCandles, window)
+                    applyWindow(liveOneMinuteCandles, window, new CandleTimestampFn())
                         .apply(ParDo.of(CandleAggregationFn.create(granularity))))
             .toMap());
   }
 
-  private <T> PCollection<Iterable<T>> applyWindow(PCollection<T> tCollection, Window<T> window) {
+  private <T> PCollection<Iterable<T>> applyWindow(
+      PCollection<T> tCollection,
+      Window<T> window,
+      SerializableFunction<T, org.joda.time.Instant> timestampFn) {
     return tCollection
+        .apply(WithTimestamps.of(timestampFn))
         .apply(window)
         .apply(WithKeys.of(1))
         .apply(GroupByKey.create())
@@ -244,6 +248,22 @@ class CandleAggregatorImpl implements CandleAggregator {
       Instant now = clock().instant();
       Instant currentMinute = now.truncatedTo(ChronoUnit.MINUTES);
       return currentMinute.plusSeconds(ONE_MINUTE.getStandardSeconds());
+    }
+  }
+
+  private static class CandleTimestampFn
+      implements SerializableFunction<Candle, org.joda.time.Instant> {
+    @Override
+    public org.joda.time.Instant apply(Candle candle) {
+      return new org.joda.time.Instant(candle.getStart().getSeconds());
+    }
+  }
+
+  private static class TradeTimestampFn
+      implements SerializableFunction<ExchangeTrade, org.joda.time.Instant> {
+    @Override
+    public org.joda.time.Instant apply(ExchangeTrade trade) {
+      return new org.joda.time.Instant(trade.getTimestamp().getSeconds());
     }
   }
 }
