@@ -20,6 +20,6 @@ jobs:
       - name: Run tests
         run: |
           bazel test //... \
-            --test output=errors
+            --test_output=errors
 
 
