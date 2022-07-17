@@ -2,6 +2,7 @@ java_test(
     name = "CandleAggregatorTest",
     srcs = ["CandleAggregatorTest.java"],
     deps = [
+        "//:autovalue",
         "//src/main/java/com/verlumen/tradestar/candles:candle_aggregator",
         "//src/main/java/com/verlumen/tradestar/candles:candles_module",
         "@maven//:com_google_guava_guava",
