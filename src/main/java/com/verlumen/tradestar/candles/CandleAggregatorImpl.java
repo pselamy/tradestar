@@ -16,27 +16,17 @@ import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.Duration;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BaseBar;
-import org.ta4j.core.num.DoubleNum;
 
 import javax.inject.Inject;
 import java.util.Arrays;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.function.Function.identity;
-import static org.apache.beam.sdk.transforms.windowing.Window.into;
+import static org.ta4j.core.num.DoubleNum.valueOf;
 
 
 class CandleAggregatorImpl implements CandleAggregator {
-    private static final Duration ONE_MINUTE = Duration.standardMinutes(1);
-    private final ImmutableMap<GranularitySpec, Window<?>> WINDOWS =
-            Arrays.stream(GranularitySpec.values())
-                    .collect(ImmutableMap.toImmutableMap(
-                            identity(),
-                            granularitySpec -> into(FixedWindows.of(
-                                    Duration.standardMinutes(granularitySpec.minutes())))
-                    ));
-
     @Inject
     CandleAggregatorImpl() {
     }
@@ -57,27 +47,21 @@ class CandleAggregatorImpl implements CandleAggregator {
     @Override
     public PCollection<Candle> aggregate(PCollection<ExchangeTrade> trades) {
         PCollection<Candle> oneMinuteCandles =
-                createCandles(trades, GranularitySpec.ONE_MINUTE);
+                createCandles(trades);
 
-        BiStream.<Granularity, Window<Candle>>from(windows())
-                .mapToObj((granularity, window) ->
-                        applyWindow(oneMinuteCandles, window)
-                                .apply(ParDo.of(CandleFactoryFn
-                                        .create(granularity))));
-
-        ImmutableList<PCollection<Candle>> collect = BiStream.from(WINDOWS)
-                .map((granularity, window) -> aggregate(trades, granularity,
-                        window))
-                .collect(toImmutableList());
         PCollectionList<Candle> candleCollections =
-                PCollectionList.of(collect);
+                PCollectionList.of(BiStream.<Granularity, Window<Candle>>from(windows())
+                        .mapToObj((granularity, window) ->
+                                applyWindow(oneMinuteCandles, window)
+                                        .apply(ParDo.of(CandleAggregationFn.create(granularity))))
+                        .collect(toImmutableList()));
         return candleCollections.apply(Flatten.pCollections());
     }
 
-    private PCollection<Candle> createCandles(PCollection<ExchangeTrade> trades, GranularitySpec granularitySpec) {
+    private PCollection<Candle> createCandles(PCollection<ExchangeTrade> trades) {
         return applyWindow(trades,
-                window(Duration.standardMinutes(granularitySpec.minutes())))
-                .apply(ParDo.of(CandleFactoryFn.create(granularitySpec.granularity())));
+                window(Duration.standardMinutes(1)))
+                .apply(ParDo.of(OneMinuteCandleFn.create()));
     }
 
     private <T> PCollection<Iterable<T>> applyWindow(
@@ -90,41 +74,86 @@ class CandleAggregatorImpl implements CandleAggregator {
     }
 
     @AutoValue
-    abstract static class CandleFactoryFn
-            extends DoFn<Iterable<ExchangeTrade>, Candle> {
-        private static CandleFactoryFn create(Granularity granularity) {
-            return new AutoValue_CandleAggregatorImpl_CandleFactoryFn(granularity);
+    abstract static class OneMinuteCandleFn extends DoFn<Iterable<ExchangeTrade>, Candle> {
+        private static OneMinuteCandleFn create() {
+            return new AutoValue_CandleAggregatorImpl_CandleFactoryFn();
+        }
+
+        @ProcessElement
+        public void processElement(ProcessContext c) {
+            ImmutableList<ExchangeTrade> trades = ImmutableList.copyOf(
+                    firstNonNull(c.element(), ImmutableList.of()));
+            Candle.Builder candleBuilder =
+                    Candle.newBuilder().setGranularity(Granularity.ONE_MINUTE);
+
+            candleBuilder.getStartBuilder().setSeconds(getStartTime(trades));
+
+            Bar bar = BaseBar.builder().build();
+            for (ExchangeTrade trade : trades) {
+                if (candleBuilder.getStartBuilder().getSeconds() == 0) {
+                    long timestampInSeconds = trade.getTimestamp().getSeconds();
+                    long secondsPastStart = timestampInSeconds % 60;
+                    candleBuilder.getStartBuilder()
+                            .setSeconds(timestampInSeconds - secondsPastStart);
+                }
+
+                bar.addTrade(valueOf(trade.getPrice()), valueOf(trade.getVolume()));
+            }
+
+            c.output(Candle.newBuilder()
+                    .setGranularity(Granularity.ONE_MINUTE)
+                    .setOpen(bar.getOpenPrice().doubleValue())
+                    .setClose(bar.getClosePrice().doubleValue())
+                    .setHigh(bar.getHighPrice().doubleValue())
+                    .setLow(bar.getLowPrice().doubleValue())
+                    .setVolume(bar.getVolume().doubleValue())
+                    .build());
+        }
+
+        private long getStartTime(ImmutableList<ExchangeTrade> trades) {
+            long firstTradeTime = trades.get(0).getTimestamp().getSeconds();
+            long secondsPastStart = firstTradeTime % 60;
+            return firstTradeTime - secondsPastStart;
+        }
+    }
+
+    @AutoValue
+    abstract static class CandleAggregationFn
+            extends DoFn<Iterable<Candle>, Candle> {
+        private static CandleAggregationFn create(Granularity granularity) {
+            return new AutoValue_CandleAggregatorImpl_CandleAggregationFn(granularity);
         }
 
         abstract Granularity granularity();
 
         @ProcessElement
         public void processElement(ProcessContext c) {
-            Iterable<ExchangeTrade> trades =
-                    firstNonNull(c.element(), ImmutableList.of());
+            // One Minute Candles
+            ImmutableList<Candle> candles = ImmutableList.copyOf(
+                    firstNonNull(c.element(), ImmutableList.of()));
 
-            Bar bar = BaseBar.builder().build();
+            GranularitySpec granularitySpec = GranularitySpec.fromGranularity(granularity());
+            int minutes = (int) granularitySpec.minutes();
+            checkArgument(candles.size() == minutes);
+            checkArgument(candles.stream()
+                    .allMatch(candle -> candle.getGranularity()
+                            .equals(Granularity.ONE_MINUTE)));
             Candle.Builder candleBuilder = Candle.newBuilder();
-            for (ExchangeTrade trade : trades) {
-                if (candleBuilder.getStartBuilder().getSeconds() == 0) {
-                    long timestampInSeconds = trade.getTimestamp().getSeconds();
-                    long secondsPastStart =
-                            timestampInSeconds % granularity().seconds();
-                    candleBuilder.getStartBuilder()
-                            .setSeconds(timestampInSeconds - secondsPastStart);
-                }
-
-                bar.addTrade(DoubleNum.valueOf(trade.getPrice()),
-                        DoubleNum.valueOf(trade.getVolume()));
-            }
+            double open = candles.get(0).getOpen();
+            double high = candles.stream().mapToDouble(Candle::getHigh).max()
+                    .orElseThrow(IllegalStateException::new);
+            double low = candles.stream().mapToDouble(Candle::getLow).min()
+                    .orElseThrow(IllegalStateException::new);
+            double close = candles.get(minutes - 1).getClose();
+            double volume = candles.stream().mapToDouble(Candle::getVolume).sum();
 
             c.output(candleBuilder
+                    .setOpen(open)
+                    .setClose(close)
+                    .setHigh(high)
+                    .setLow(low)
+                    .setVolume(volume)
                     .setGranularity(granularity())
-                    .setOpen(bar.getOpenPrice().doubleValue())
-                    .setClose(bar.getClosePrice().doubleValue())
-                    .setHigh(bar.getHighPrice().doubleValue())
-                    .setLow(bar.getLowPrice().doubleValue())
-                    .setVolume(bar.getVolume().doubleValue())
                     .build());
         }
     }
