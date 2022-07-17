@@ -13,6 +13,8 @@ java_library(
     name = "candle_aggregator",
     srcs = ["CandleAggregator.java"],
     deps = [
+        "//:autovalue",
+        "@maven//:com_google_guava_guava",
         "@maven//:org_apache_beam_beam_sdks_java_core",
         "@tradestar_protos//:candles_java_proto",
         "@tradestar_protos//:trading_java_proto",
