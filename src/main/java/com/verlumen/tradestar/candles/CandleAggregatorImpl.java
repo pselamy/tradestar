@@ -17,26 +17,30 @@ import org.joda.time.Duration;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BaseBar;
 
-import java.util.Arrays;
+import java.util.EnumSet;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.function.Function.identity;
 import static org.ta4j.core.num.DoubleNum.valueOf;
 
 class CandleAggregatorImpl implements CandleAggregator {
+  private static final ImmutableMap<Granularity, Window<Candle>> WINDOWS =
+      EnumSet.allOf(Granularity.class).stream()
+          .filter(granularity -> !granularity.equals(Granularity.UNSPECIFIED))
+          .collect(
+              ImmutableMap.toImmutableMap(
+                  identity(),
+                  granularity ->
+                      window(
+                          Duration.standardMinutes(
+                              GranularitySpec.fromGranularity(granularity).minutes()))));
+
   @Inject
   CandleAggregatorImpl() {}
 
   private static <T> Window<T> window(Duration duration) {
     return Window.into(FixedWindows.of(duration));
-  }
-
-  private static <T> ImmutableMap<Granularity, Window<T>> windows() {
-    return Arrays.stream(GranularitySpec.values())
-        .collect(
-            ImmutableMap.toImmutableMap(
-                GranularitySpec::granularity,
-                granularitySpec -> window(Duration.standardMinutes(granularitySpec.minutes()))));
   }
 
   @Override
@@ -45,7 +49,7 @@ class CandleAggregatorImpl implements CandleAggregator {
         applyWindow(params.trades(), window(Duration.standardMinutes(1)))
             .apply(ParDo.of(OneMinuteCandleFn.create()));
     return AggregateResult.create(
-        BiStream.<Granularity, Window<Candle>>from(windows())
+        BiStream.from(WINDOWS)
             .mapValues(
                 (granularity, window) ->
                     applyWindow(oneMinuteCandles, window)
