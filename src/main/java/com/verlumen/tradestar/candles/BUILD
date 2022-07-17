@@ -1,3 +1,5 @@
+package(default_visibility = ["//:__subpackages__"])
+
 java_binary(
     name = "candle_aggregation_pipeline",
     srcs = ["CandleAggregationPipeline.java"],
