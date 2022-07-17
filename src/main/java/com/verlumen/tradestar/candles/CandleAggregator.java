@@ -9,10 +9,12 @@ import com.verlumen.tradestar.protos.candles.Granularity;
 import com.verlumen.tradestar.protos.trading.ExchangeTrade;
 import org.apache.beam.sdk.values.PCollection;
 
+import java.io.Serializable;
+
 public interface CandleAggregator {
   AggregateResult aggregate(AggregateParams params);
 
-  interface CandleService {
+  interface CandleService extends Serializable {
     ImmutableSet<Candle> getCandles();
   }
 
