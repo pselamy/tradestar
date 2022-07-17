@@ -10,6 +10,7 @@ import com.verlumen.tradestar.protos.trading.ExchangeTrade;
 import org.apache.beam.sdk.values.PCollection;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public interface CandleAggregator {
   AggregateResult aggregate(AggregateParams params);
@@ -36,6 +37,10 @@ public interface CandleAggregator {
 
   @AutoValue
   abstract class AggregateResult {
+    static AggregateResult create(Map<Granularity, PCollection<Candle>> candles) {
+      return create(ImmutableMap.copyOf(candles));
+    }
+
     static AggregateResult create(ImmutableMap<Granularity, PCollection<Candle>> candles) {
       return new AutoValue_CandleAggregator_AggregateResult(candles);
     }
