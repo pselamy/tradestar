@@ -47,7 +47,9 @@ class CandleAggregatorImpl implements CandleAggregator {
     @Override
     public PCollection<Candle> aggregate(PCollection<ExchangeTrade> trades) {
         PCollection<Candle> oneMinuteCandles =
-                createCandles(trades);
+                applyWindow(trades,
+                        window(Duration.standardMinutes(1)))
+                        .apply(ParDo.of(OneMinuteCandleFn.create()));
 
         PCollectionList<Candle> candleCollections =
                 PCollectionList.of(BiStream.<Granularity, Window<Candle>>from(windows())
@@ -56,12 +58,6 @@ class CandleAggregatorImpl implements CandleAggregator {
                                         .apply(ParDo.of(CandleAggregationFn.create(granularity))))
                         .collect(toImmutableList()));
         return candleCollections.apply(Flatten.pCollections());
-    }
-
-    private PCollection<Candle> createCandles(PCollection<ExchangeTrade> trades) {
-        return applyWindow(trades,
-                window(Duration.standardMinutes(1)))
-                .apply(ParDo.of(OneMinuteCandleFn.create()));
     }
 
     private <T> PCollection<Iterable<T>> applyWindow(
