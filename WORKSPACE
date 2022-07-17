@@ -44,9 +44,9 @@ maven_install(
         "org.apache.beam:beam-sdks-java-extensions-protobuf:2.39.0",
         "org.apache.beam:beam-sdks-java-test-utils:2.39.0",
         # Unit Test Dependencies
+        "com.google.testparameterinjector:test-parameter-injector:1.8",
         "com.google.truth:truth:1.1.3",
         "com.google.truth.extensions:truth-java8-extension:1.1.3",
-        "com.google.testparameterinjector:test-parameter-injector:1.8",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
