@@ -2,6 +2,7 @@ package com.verlumen.tradestar.candles;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.verlumen.tradestar.protos.candles.Candle;
 import com.verlumen.tradestar.protos.candles.Granularity;
 import com.verlumen.tradestar.protos.trading.ExchangeTrade;
@@ -12,7 +13,7 @@ public interface CandleAggregator {
 
   @AutoValue
   abstract class AggregateParams {
-    abstract PCollection<Candle> candles();
+    abstract ImmutableSet<Candle> candles();
 
     abstract PCollection<ExchangeTrade> trades();
   }
