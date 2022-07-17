@@ -40,13 +40,13 @@ public class CandleAggregatorTest {
 
   @Test
   public void aggregate_aggregatesCandles(
-      @TestParameter AggregateAggregatesCandlesTestCase testCase) {
+      @TestParameter AggregateAggregatesCandlesTestCase testCase) throws Exception {
     // Arrange
     PCollection<ExchangeTrade> trades =
         createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
     FakeCandleService candleService = FakeCandleService.create(testCase.candles);
     FakeTradeService tradeService = FakeTradeService.create(trades);
-    AggregateParams params = AggregateParams.create(candleService, tradeService);
+    AggregateParams params = AggregateParams.create(candleService, pipeline, tradeService);
 
     // Act
     AggregateResult actual = aggregator.aggregate(params);

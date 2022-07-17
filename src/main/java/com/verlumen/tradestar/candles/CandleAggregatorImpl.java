@@ -37,6 +37,7 @@ import static java.util.function.Function.identity;
 import static org.ta4j.core.num.DoubleNum.valueOf;
 
 class CandleAggregatorImpl implements CandleAggregator {
+  private static final Duration ONE_SECOND = Duration.standardSeconds(1);
   private static final Duration ONE_MINUTE = Duration.standardMinutes(1);
   private static final ImmutableMap<Granularity, Window<Candle>> WINDOWS =
       EnumSet.allOf(Granularity.class).stream()
@@ -47,10 +48,12 @@ class CandleAggregatorImpl implements CandleAggregator {
                   granularity -> window(Duration.standardMinutes(getMinutes(granularity)))));
 
   private final Clock clock;
+  private final Sleeper sleeper;
 
   @Inject
-  CandleAggregatorImpl(Clock clock) {
+  CandleAggregatorImpl(Clock clock, Sleeper sleeper) {
     this.clock = clock;
+    this.sleeper = sleeper;
   }
 
   private static long getMinutes(Granularity granularity) {
@@ -62,17 +65,24 @@ class CandleAggregatorImpl implements CandleAggregator {
   }
 
   @Override
-  public AggregateResult aggregate(AggregateParams params) {
+  public AggregateResult aggregate(AggregateParams params) throws InterruptedException {
     StartTimeCalculator startTimeCalculator = StartTimeCalculator.create(clock);
-    PCollection<Candle> oneMinuteCandles =
+    HistoricalOneMinuteCandleAggregator historicalOneMinuteCandleAggregator =
+        HistoricalOneMinuteCandleAggregator.create(
+            params.candleService(), clock, params.pipeline(), sleeper, startTimeCalculator);
+    PCollection<Candle> historicalOneMinuteCandles =
+        historicalOneMinuteCandleAggregator.aggregate();
+
+    PCollection<Candle> liveOneMinuteCandles =
         applyWindow(params.trades(), window(ONE_MINUTE))
-            .apply(ParDo.of(OneMinuteCandleFn.create(startTimeCalculator)));
+            .apply(ParDo.of(OneMinuteCandleFn.create(startTimeCalculator)))
+            .apply(Wait.on(historicalOneMinuteCandles));
 
     return AggregateResult.create(
         BiStream.from(WINDOWS)
             .mapValues(
                 (granularity, window) ->
-                    applyWindow(oneMinuteCandles, window)
+                    applyWindow(liveOneMinuteCandles, window)
                         .apply(ParDo.of(CandleAggregationFn.create(granularity))))
             .toMap());
   }
@@ -136,16 +146,15 @@ class CandleAggregatorImpl implements CandleAggregator {
   }
 
   @AutoValue
-  abstract static class HistoricalCandleAggregator {
-    private static HistoricalCandleAggregator create(
+  abstract static class HistoricalOneMinuteCandleAggregator {
+    private static HistoricalOneMinuteCandleAggregator create(
         CandleService candleService,
         Clock clock,
         Pipeline pipeline,
-        Duration sleepDuration,
         Sleeper sleeper,
         StartTimeCalculator startTimeCalculator) {
-      return new AutoValue_CandleAggregatorImpl_HistoricalCandleAggregator(
-          candleService, clock, pipeline, sleepDuration, sleeper, startTimeCalculator);
+      return new AutoValue_CandleAggregatorImpl_HistoricalOneMinuteCandleAggregator(
+          candleService, clock, pipeline, ONE_SECOND, sleeper, startTimeCalculator);
     }
 
     abstract CandleService candleService();

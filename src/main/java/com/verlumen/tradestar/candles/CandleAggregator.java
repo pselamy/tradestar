@@ -7,13 +7,14 @@ import com.google.common.collect.ImmutableSet;
 import com.verlumen.tradestar.protos.candles.Candle;
 import com.verlumen.tradestar.protos.candles.Granularity;
 import com.verlumen.tradestar.protos.trading.ExchangeTrade;
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.values.PCollection;
 
 import java.io.Serializable;
 import java.util.Map;
 
 public interface CandleAggregator {
-  AggregateResult aggregate(AggregateParams params);
+  AggregateResult aggregate(AggregateParams params) throws InterruptedException;
 
   interface CandleService extends Serializable {
     ImmutableSet<Candle> getCandles();
@@ -25,8 +26,9 @@ public interface CandleAggregator {
 
   @AutoValue
   abstract class AggregateParams {
-    static AggregateParams create(CandleService candleService, TradeService tradeService) {
-      return new AutoValue_CandleAggregator_AggregateParams(candleService, tradeService);
+    static AggregateParams create(
+        CandleService candleService, Pipeline pipeline, TradeService tradeService) {
+      return new AutoValue_CandleAggregator_AggregateParams(candleService, pipeline, tradeService);
     }
 
     @Memoized
@@ -40,6 +42,8 @@ public interface CandleAggregator {
     }
 
     abstract CandleService candleService();
+
+    abstract Pipeline pipeline();
 
     abstract TradeService tradeService();
   }
