@@ -17,6 +17,7 @@ import org.apache.beam.sdk.extensions.protobuf.ProtoCoder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.util.Sleeper;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,10 +32,13 @@ import static com.google.common.truth.Truth.assertThat;
 public class CandleAggregatorTest {
   private CandleAggregator aggregator;
   private Pipeline pipeline;
+  private Sleeper sleeper;
 
   @Before
   public void setup() {
-    this.aggregator = Guice.createInjector(new CandlesModule()).getInstance(CandleAggregator.class);
+    this.aggregator =
+        Guice.createInjector(CandlesModule.TestModule.create(sleeper))
+            .getInstance(CandleAggregator.class);
     this.pipeline = TestPipeline.create();
   }
 
@@ -105,6 +109,16 @@ public class CandleAggregatorTest {
     private static FakeCandleService create(ImmutableSet<Candle> candles) {
       return new AutoValue_CandleAggregatorTest_FakeCandleService(candles);
     }
+  }
+
+  @AutoValue
+  abstract static class FakeSleeper implements Sleeper {
+    private static FakeSleeper create() {
+      return new AutoValue_CandleAggregatorTest_FakeSleeper();
+    }
+
+    @Override
+    public void sleep(long millis) {}
   }
 
   @AutoValue
