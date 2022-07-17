@@ -44,7 +44,8 @@ public class CandleAggregatorTest {
     // Arrange
     PCollection<ExchangeTrade> trades =
         createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
-    AggregateParams params = AggregateParams.create(testCase.candles, trades);
+    FakeCandleService candleService = FakeCandleService.create(testCase.candles);
+    AggregateParams params = AggregateParams.create(candleService, trades);
 
     // Act
     AggregateResult actual = aggregator.aggregate(params);
@@ -61,7 +62,8 @@ public class CandleAggregatorTest {
     // Arrange
     PCollection<ExchangeTrade> trades =
         createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
-    AggregateParams params = AggregateParams.create(testCase.candles, trades);
+    FakeCandleService candleService = FakeCandleService.create(testCase.candles);
+    AggregateParams params = AggregateParams.create(candleService, trades);
 
     // Act / Assert
     assertThrows(testCase.expectedException.getClass(), () -> aggregator.aggregate(params));
