@@ -19,10 +19,14 @@ public interface CandleAggregator {
     ImmutableSet<Candle> getCandles();
   }
 
+  interface TradeService extends Serializable {
+    PCollection<ExchangeTrade> getTrades();
+  }
+
   @AutoValue
   abstract class AggregateParams {
-    static AggregateParams create(CandleService candleService, PCollection<ExchangeTrade> trades) {
-      return new AutoValue_CandleAggregator_AggregateParams(candleService, trades);
+    static AggregateParams create(CandleService candleService, TradeService tradeService) {
+      return new AutoValue_CandleAggregator_AggregateParams(candleService, tradeService);
     }
 
     @Memoized
@@ -30,9 +34,14 @@ public interface CandleAggregator {
       return candleService().getCandles();
     }
 
+    @Memoized
+    PCollection<ExchangeTrade> trades() {
+      return tradeService().getTrades();
+    }
+
     abstract CandleService candleService();
 
-    abstract PCollection<ExchangeTrade> trades();
+    abstract TradeService tradeService();
   }
 
   @AutoValue

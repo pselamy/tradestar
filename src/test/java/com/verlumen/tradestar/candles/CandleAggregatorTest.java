@@ -45,31 +45,17 @@ public class CandleAggregatorTest {
     PCollection<ExchangeTrade> trades =
         createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
     FakeCandleService candleService = FakeCandleService.create(testCase.candles);
-    AggregateParams params = AggregateParams.create(candleService, trades);
-
-    // Act
-    AggregateResult actual = aggregator.aggregate(params);
-
-    // Assert
-    EnumSet.allOf(Granularity.class).stream()
-        .filter(Constants.SUPPORTED_GRANULARITIES::contains)
-        .forEach(granularity -> assertThatCandlesAreAggregated(testCase, actual, granularity));
-  }
-
-  @Test
-  public void aggregate_returnsNonNullCandles(
-      @TestParameter AggregateAggregatesCandlesTestCase testCase) {
-    // Arrange
-    PCollection<ExchangeTrade> trades =
-        createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
-    FakeCandleService candleService = FakeCandleService.create(testCase.candles);
-    AggregateParams params = AggregateParams.create(candleService, trades);
+    FakeTradeService tradeService = FakeTradeService.create(trades);
+    AggregateParams params = AggregateParams.create(candleService, tradeService);
 
     // Act
     AggregateResult actual = aggregator.aggregate(params);
 
     // Assert
     assertThat(actual.candles()).isNotNull();
+    EnumSet.allOf(Granularity.class).stream()
+        .filter(Constants.SUPPORTED_GRANULARITIES::contains)
+        .forEach(granularity -> assertThatCandlesAreAggregated(testCase, actual, granularity));
   }
 
   private void assertThatCandlesAreAggregated(
@@ -118,6 +104,13 @@ public class CandleAggregatorTest {
   abstract static class FakeCandleService implements CandleAggregator.CandleService {
     private static FakeCandleService create(ImmutableSet<Candle> candles) {
       return new AutoValue_CandleAggregatorTest_FakeCandleService(candles);
+    }
+  }
+
+  @AutoValue
+  abstract static class FakeTradeService implements CandleAggregator.TradeService {
+    private static FakeTradeService create(PCollection<ExchangeTrade> trades) {
+      return new AutoValue_CandleAggregatorTest_FakeTradeService(trades);
     }
   }
 }
