@@ -13,6 +13,10 @@ public interface CandleAggregator {
 
   @AutoValue
   abstract class AggregateParams {
+    static AggregateParams create(ImmutableSet<Candle> candles, PCollection<ExchangeTrade> trades) {
+      return new AutoValue_CandleAggregator_AggregateParams(candles, trades);
+    }
+
     abstract ImmutableSet<Candle> candles();
 
     abstract PCollection<ExchangeTrade> trades();
