@@ -20,7 +20,7 @@ public interface CandleAggregator {
 
   @AutoValue
   abstract class AggregateResult {
-    static AggregateResult create(PCollection<Candle> candles) {
+    static AggregateResult create(ImmutableMap<Granularity, PCollection<Candle>> candles) {
       return new AutoValue_CandleAggregator_AggregateResult(candles);
     }
 
