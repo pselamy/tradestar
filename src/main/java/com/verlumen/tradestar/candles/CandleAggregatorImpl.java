@@ -3,6 +3,7 @@ package com.verlumen.tradestar.candles;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.mu.util.stream.BiStream;
 import com.verlumen.tradestar.core.candles.GranularitySpec;
 import com.verlumen.tradestar.protos.candles.Candle;
@@ -17,7 +18,6 @@ import org.joda.time.Duration;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BaseBar;
 
-import javax.inject.Inject;
 import java.util.Arrays;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
@@ -76,7 +76,7 @@ class CandleAggregatorImpl implements CandleAggregator {
     @AutoValue
     abstract static class OneMinuteCandleFn extends DoFn<Iterable<ExchangeTrade>, Candle> {
         private static OneMinuteCandleFn create() {
-            return new AutoValue_CandleAggregatorImpl_CandleFactoryFn();
+            return new AutoValue_CandleAggregatorImpl_OneMinuteCandleFn();
         }
 
         @ProcessElement
