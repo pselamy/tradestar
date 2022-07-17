@@ -40,6 +40,7 @@ public class CandleAggregatorTest {
         Guice.createInjector(CandlesModule.TestModule.create(sleeper))
             .getInstance(CandleAggregator.class);
     this.pipeline = TestPipeline.create();
+    this.sleeper = FakeSleeper.create();
   }
 
   @Test
