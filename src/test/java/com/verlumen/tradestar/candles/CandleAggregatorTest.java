@@ -53,7 +53,7 @@ public class CandleAggregatorTest {
     // Assert
     assertThat(actual.candles()).isNotNull();
     EnumSet.allOf(Granularity.class).stream()
-        .filter(granularity -> !granularity.equals(Granularity.UNSPECIFIED))
+        .filter(Constants.SUPPORTED_GRANULARITIES::contains)
         .forEach(granularity -> assertThatCandlesAreAggregated(testCase, actual, granularity));
   }
 

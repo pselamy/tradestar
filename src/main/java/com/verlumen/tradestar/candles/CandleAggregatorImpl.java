@@ -27,7 +27,7 @@ import static org.ta4j.core.num.DoubleNum.valueOf;
 class CandleAggregatorImpl implements CandleAggregator {
   private static final ImmutableMap<Granularity, Window<Candle>> WINDOWS =
       EnumSet.allOf(Granularity.class).stream()
-          .filter(granularity -> !granularity.equals(Granularity.UNSPECIFIED))
+          .filter(Constants.SUPPORTED_GRANULARITIES::contains)
           .collect(
               ImmutableMap.toImmutableMap(
                   identity(),

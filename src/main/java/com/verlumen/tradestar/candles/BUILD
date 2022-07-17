@@ -28,6 +28,7 @@ java_library(
     ],
     deps = [
         ":candle_aggregator",
+        ":constants",
         "//:autovalue",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
