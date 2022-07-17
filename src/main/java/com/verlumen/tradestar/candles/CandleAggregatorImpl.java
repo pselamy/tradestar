@@ -4,7 +4,6 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.google.mu.util.stream.BiStream;
 import com.verlumen.tradestar.core.candles.GranularitySpec;
 import com.verlumen.tradestar.protos.candles.Candle;
 import com.verlumen.tradestar.protos.candles.Granularity;
@@ -13,7 +12,6 @@ import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
 import org.joda.time.Duration;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BaseBar;
@@ -22,7 +20,6 @@ import java.util.Arrays;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.ta4j.core.num.DoubleNum.valueOf;
 
 
@@ -50,14 +47,14 @@ class CandleAggregatorImpl implements CandleAggregator {
                 applyWindow(trades,
                         window(Duration.standardMinutes(1)))
                         .apply(ParDo.of(OneMinuteCandleFn.create()));
-
-        PCollectionList<Candle> candleCollections =
-                PCollectionList.of(BiStream.<Granularity, Window<Candle>>from(windows())
-                        .mapToObj((granularity, window) ->
-                                applyWindow(oneMinuteCandles, window)
-                                        .apply(ParDo.of(CandleAggregationFn.create(granularity))))
-                        .collect(toImmutableList()));
-        return candleCollections.apply(Flatten.pCollections());
+        return oneMinuteCandles;
+//        PCollectionList<Candle> candleCollections =
+//                PCollectionList.of(BiStream.<Granularity, Window<Candle>>from(windows())
+//                        .mapToObj((granularity, window) ->
+//                                applyWindow(oneMinuteCandles, window)
+//                                        .apply(ParDo.of(CandleAggregationFn.create(granularity))))
+//                        .collect(toImmutableList()));
+//        return candleCollections.apply(Flatten.pCollections());
     }
 
     private <T> PCollection<Iterable<T>> applyWindow(
