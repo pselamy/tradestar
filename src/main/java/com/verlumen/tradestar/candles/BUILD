@@ -28,6 +28,7 @@ java_library(
     ],
     deps = [
         ":candle_aggregator",
+        ":constants",
         "//:autovalue",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
@@ -50,5 +51,14 @@ java_library(
         ":candle_aggregator",
         ":candle_aggregator_impl",
         "@maven//:com_google_inject_guice",
+    ],
+)
+
+java_library(
+    name = "constants",
+    srcs = ["Constants.java"],
+    deps = [
+        "@maven//:com_google_guava_guava",
+        "@tradestar_protos//:candles_java_proto",
     ],
 )

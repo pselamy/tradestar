@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Comparator;
+import java.util.EnumSet;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -50,20 +51,37 @@ public class CandleAggregatorTest {
     AggregateResult actual = aggregator.aggregate(params);
 
     // Assert
-    assertThat(actual.candles()).isNotNull();
-    testCase.expected.forEach(
-        (granularity, expectedCandles) ->
-            assertThatCandlesAreAggregated(actual.candles().get(granularity), expectedCandles));
+    EnumSet.allOf(Granularity.class).stream()
+        .filter(Constants.SUPPORTED_GRANULARITIES::contains)
+        .forEach(granularity -> assertThatCandlesAreAggregated(testCase, actual, granularity));
   }
 
-  private <T> PCollection<T> createPCollection(ImmutableSet<T> tList, Coder<T> tCoder) {
-    return pipeline.apply(Create.of(tList).withCoder(tCoder));
+  @Test
+  public void aggregate_returnsNonNullCandles(
+      @TestParameter AggregateAggregatesCandlesTestCase testCase) {
+    // Arrange
+    PCollection<ExchangeTrade> trades =
+        createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
+    FakeCandleService candleService = FakeCandleService.create(testCase.candles);
+    AggregateParams params = AggregateParams.create(candleService, trades);
+
+    // Act
+    AggregateResult actual = aggregator.aggregate(params);
+
+    // Assert
+    assertThat(actual.candles()).isNotNull();
   }
 
   private void assertThatCandlesAreAggregated(
-      PCollection<Candle> actual, ImmutableSet<Candle> expected) {
-    assertThat(actual).isNotNull();
-    PAssert.that(actual)
+      AggregateAggregatesCandlesTestCase testCase,
+      AggregateResult actual,
+      Granularity granularity) {
+    PCollection<Candle> actualCandleCollection = actual.candles().get(granularity);
+    ImmutableSet<Candle> expectedCandles =
+        testCase.expected.getOrDefault(granularity, ImmutableSet.of());
+
+    assertThat(actualCandleCollection).isNotNull();
+    PAssert.that(actualCandleCollection)
         .satisfies(
             actualCandles -> {
               assertThat(actualCandles)
@@ -71,7 +89,11 @@ public class CandleAggregatorTest {
                       Comparator.<Candle>comparingLong(candle -> candle.getStart().getSeconds()));
               return null;
             });
-    PAssert.that(actual).containsInAnyOrder(expected);
+    PAssert.that(actualCandleCollection).containsInAnyOrder(expectedCandles);
+  }
+
+  private <T> PCollection<T> createPCollection(ImmutableSet<T> tList, Coder<T> tCoder) {
+    return pipeline.apply(Create.of(tList).withCoder(tCoder));
   }
 
   @SuppressWarnings("unused")
