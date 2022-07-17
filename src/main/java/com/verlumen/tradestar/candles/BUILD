@@ -38,3 +38,13 @@ java_library(
         "@tradestar_protos//:trading_java_proto",
     ],
 )
+
+java_library(
+    name = "candles_module",
+    srcs = ["CandlesModule.java"],
+    deps = [
+        ":candle_aggregator",
+        ":candle_aggregator_impl",
+        "@maven//:com_google_inject_guice",
+    ],
+)
