@@ -25,7 +25,6 @@ import org.junit.runner.RunWith;
 import java.util.Comparator;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
 @RunWith(TestParameterInjector.class)
 public class CandleAggregatorTest {
@@ -55,18 +54,6 @@ public class CandleAggregatorTest {
     testCase.expected.forEach(
         (granularity, expectedCandles) ->
             assertThatCandlesAreAggregated(actual.candles().get(granularity), expectedCandles));
-  }
-
-  @Test
-  public void aggregate_throwsExceptions(@TestParameter AggregateThrowsExceptionTestCase testCase) {
-    // Arrange
-    PCollection<ExchangeTrade> trades =
-        createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
-    FakeCandleService candleService = FakeCandleService.create(testCase.candles);
-    AggregateParams params = AggregateParams.create(candleService, trades);
-
-    // Act / Assert
-    assertThrows(testCase.expectedException.getClass(), () -> aggregator.aggregate(params));
   }
 
   private <T> PCollection<T> createPCollection(ImmutableSet<T> tList, Coder<T> tCoder) {
@@ -102,23 +89,6 @@ public class CandleAggregatorTest {
       this.candles = candles;
       this.trades = trades;
       this.expected = expected;
-    }
-  }
-
-  private enum AggregateThrowsExceptionTestCase {
-    ;
-
-    private final ImmutableSet<Candle> candles;
-    private final ImmutableSet<ExchangeTrade> trades;
-    private final Exception expectedException;
-
-    AggregateThrowsExceptionTestCase(
-        ImmutableSet<Candle> candles,
-        ImmutableSet<ExchangeTrade> trades,
-        Exception expectedException) {
-      this.candles = candles;
-      this.trades = trades;
-      this.expectedException = expectedException;
     }
   }
 
