@@ -137,6 +137,17 @@ class CandleAggregatorImpl implements CandleAggregator {
 
   @AutoValue
   abstract static class HistoricalCandleAggregator {
+    private static HistoricalCandleAggregator create(
+        CandleService candleService,
+        Clock clock,
+        Pipeline pipeline,
+        Duration sleepDuration,
+        Sleeper sleeper,
+        StartTimeCalculator startTimeCalculator) {
+      return new AutoValue_CandleAggregatorImpl_HistoricalCandleAggregator(
+          candleService, clock, pipeline, sleepDuration, sleeper, startTimeCalculator);
+    }
+
     abstract CandleService candleService();
 
     abstract Clock clock();
