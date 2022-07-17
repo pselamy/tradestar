@@ -52,3 +52,11 @@ java_library(
         "@maven//:com_google_inject_guice",
     ],
 )
+
+java_library(
+    name = "constants",
+    srcs = ["Constants.java"],
+    deps = [
+        "@maven//:com_google_guava_guava",
+    ],
+)
