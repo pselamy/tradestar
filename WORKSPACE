@@ -46,6 +46,7 @@ maven_install(
         # Unit Test Dependencies
         "com.google.truth:truth:1.1.3",
         "com.google.truth.extensions:truth-java8-extension:1.13",
+        "com.google.testparameterinjector:test-parameter-injector:1.8",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
