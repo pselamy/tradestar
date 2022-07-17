@@ -34,7 +34,14 @@ maven_install(
         "com.google.auto.value:auto-value-annotations:1.9",
         "com.google.guava:guava:31.1-jre",
         "com.google.inject:guice:5.1.0",
+        "com.google.mug:mug:6.3",
+        "joda-time:joda-time:2.10.14",
+        "org.ta4j:ta4j-core:0.14",
+        # XChange
+        "org.knowm.xchange:xchange-core:5.0.13",
+        # Apache Beam
         "org.apache.beam:beam-sdks-java-core:2.39.0",
+        "org.apache.beam:beam-sdks-java-extensions-protobuf:2.39.0",
         # Unit Test Dependencies
         "com.google.truth:truth:1.1.3",
     ],
@@ -96,9 +103,17 @@ install_deps()
 ##########################
 ##### CORE LIBRARIES #####
 ##########################
+
+git_repository(
+    name = "tradestar_core",
+    commit = "8aa3eba72187bf490466141a890bc76ed17dbcdc",
+    remote = "https://github.com/pselamy/tradestar-core",
+    shallow_since = "1657475286 -0400",
+)
+
 git_repository(
     name = "tradestar_protos",
-    commit = "99ab9fdef3ccf2fe1638de8f8110beb848e72afb",
+    commit = "8072191038bb4ae760a1642f362a34f8083478f8",
     remote = "https://github.com/pselamy/tradestar-protos",
     shallow_since = "1657475286 -0400",
 )
