@@ -31,7 +31,7 @@ public class CandleAggregatorTest {
         this.testCase = testCase;
     }
 
-    @Parameters
+    @Parameters(name = "{0}")
     public static Iterable<?> data() {
         return allOf(AggregateTestCase.class).stream()
                 .map(testCase -> new Object[]{testCase})
@@ -50,8 +50,14 @@ public class CandleAggregatorTest {
     }
 
     private enum AggregateTestCase {
-        ;
-        private ImmutableList<ExchangeTrade> trades;
-        private ImmutableList<Candle> expected;
+        NO_TRADES(ImmutableList.of(), ImmutableList.of());
+
+        private final ImmutableList<ExchangeTrade> trades;
+        private final ImmutableList<Candle> expected;
+
+        AggregateTestCase(ImmutableList<ExchangeTrade> trades, ImmutableList<Candle> expected) {
+            this.trades = trades;
+            this.expected = expected;
+        }
     }
 }
