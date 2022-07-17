@@ -42,6 +42,7 @@ maven_install(
         # Apache Beam
         "org.apache.beam:beam-sdks-java-core:2.39.0",
         "org.apache.beam:beam-sdks-java-extensions-protobuf:2.39.0",
+        "org.apache.beam:beam-sdks-java-test-utils:2.39.0",
         # Unit Test Dependencies
         "com.google.truth:truth:1.1.3",
     ],

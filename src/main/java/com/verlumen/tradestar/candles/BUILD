@@ -1,3 +1,5 @@
+package(default_visibility = ["//:__subpackages__"])
+
 java_binary(
     name = "candle_aggregation_pipeline",
     srcs = ["CandleAggregationPipeline.java"],
@@ -36,5 +38,15 @@ java_library(
         "@tradestar_core//src/main/java/com/verlumen/tradestar/core/candles:granularity_spec",
         "@tradestar_protos//:candles_java_proto",
         "@tradestar_protos//:trading_java_proto",
+    ],
+)
+
+java_library(
+    name = "candles_module",
+    srcs = ["CandlesModule.java"],
+    deps = [
+        ":candle_aggregator",
+        ":candle_aggregator_impl",
+        "@maven//:com_google_inject_guice",
     ],
 )
