@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Comparator;
+import java.util.EnumSet;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -51,27 +52,37 @@ public class CandleAggregatorTest {
 
     // Assert
     assertThat(actual.candles()).isNotNull();
-    testCase.expected.forEach(
-        (granularity, expectedCandles) ->
-            assertThatCandlesAreAggregated(actual.candles().get(granularity), expectedCandles));
-  }
-
-  private <T> PCollection<T> createPCollection(ImmutableSet<T> tList, Coder<T> tCoder) {
-    return pipeline.apply(Create.of(tList).withCoder(tCoder));
+    EnumSet.allOf(Granularity.class).stream()
+        .filter(granularity -> !granularity.equals(Granularity.UNSPECIFIED))
+        .forEach(granularity -> assertThatCandlesAreAggregated(testCase, actual, granularity));
   }
 
   private void assertThatCandlesAreAggregated(
-      PCollection<Candle> actual, ImmutableSet<Candle> expected) {
-    assertThat(actual).isNotNull();
-    PAssert.that(actual)
+      AggregateAggregatesCandlesTestCase testCase,
+      AggregateResult actual,
+      Granularity granularity) {
+    PCollection<Candle> actualCandles =
+        actual
+            .candles()
+            .getOrDefault(
+                granularity, createPCollection(ImmutableSet.of(), ProtoCoder.of(Candle.class)));
+    ImmutableSet<Candle> expectedCandles =
+        testCase.expected.getOrDefault(granularity, ImmutableSet.of());
+
+    assertThat(actualCandles).isNotNull();
+    PAssert.that(actualCandles)
         .satisfies(
-            actualCandles -> {
-              assertThat(actualCandles)
+                actualCandles1 -> {
+              assertThat(actualCandles1)
                   .isInStrictOrder(
                       Comparator.<Candle>comparingLong(candle -> candle.getStart().getSeconds()));
               return null;
             });
-    PAssert.that(actual).containsInAnyOrder(expected);
+    PAssert.that(actualCandles).containsInAnyOrder(expectedCandles);
+  }
+
+  private <T> PCollection<T> createPCollection(ImmutableSet<T> tList, Coder<T> tCoder) {
+    return pipeline.apply(Create.of(tList).withCoder(tCoder));
   }
 
   @SuppressWarnings("unused")
