@@ -20,6 +20,7 @@ import static java.util.EnumSet.allOf;
 
 @RunWith(Parameterized.class)
 public class CandleAggregatorTest {
+    private static final ProtoCoder<ExchangeTrade> TRADE_CODER = ProtoCoder.of(ExchangeTrade.class);
     private final CandleAggregator aggregator;
     private final Pipeline pipeline;
     private final AggregateTestCase testCase;
@@ -41,8 +42,7 @@ public class CandleAggregatorTest {
     @Test
     public void test() {
         PCollection<ExchangeTrade> trades = pipeline
-                .apply(Create.of(testCase.trades))
-                .setCoder(ProtoCoder.of(ExchangeTrade.class));
+                .apply(Create.of(testCase.trades).withCoder(TRADE_CODER));
 
         PCollection<Candle> actual = aggregator.aggregate(trades);
 

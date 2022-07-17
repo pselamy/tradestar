@@ -1,5 +1,5 @@
 java_test(
-    name = "candle_aggregator_test",
+    name = "CandleAggregatorTest",
     srcs = ["CandleAggregatorTest.java"],
     deps = [
         "//src/main/java/com/verlumen/tradestar/candles:candle_aggregator",
