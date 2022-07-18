@@ -58,6 +58,7 @@ public class CandleAggregatorTest {
   public void aggregate_aggregatesCandles(
       @TestParameter AggregateAggregatesCandlesTestCase testCase) throws Exception {
     // Arrange
+    testCase.instants.forEach(clock.instants()::offer);
     PCollection<ExchangeTrade> trades =
         createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
     FakeCandleService candleService = FakeCandleService.create(testCase.candles);
@@ -105,6 +106,7 @@ public class CandleAggregatorTest {
     private final ImmutableSet<Candle> candles;
     private final ImmutableSet<ExchangeTrade> trades;
     private final ImmutableMap<Granularity, ImmutableSet<Candle>> expected;
+    private final ImmutableSet<Instant> instants;
 
     AggregateAggregatesCandlesTestCase(
         ImmutableSet<Candle> candles,
@@ -113,6 +115,7 @@ public class CandleAggregatorTest {
       this.candles = candles;
       this.trades = trades;
       this.expected = expected;
+      this.instants = ImmutableSet.of();
     }
   }
 
