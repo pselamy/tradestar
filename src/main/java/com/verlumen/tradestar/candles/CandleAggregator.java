@@ -32,7 +32,7 @@ public interface CandleAggregator {
     }
 
     @Memoized
-    ImmutableSet<Candle> candles() {
+    ImmutableSet<Candle> historicalCandles() {
       return candleService().getCandles();
     }
 
