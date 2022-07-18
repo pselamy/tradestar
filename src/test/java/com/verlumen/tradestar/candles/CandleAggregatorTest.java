@@ -40,7 +40,9 @@ public class CandleAggregatorTest {
   private Pipeline pipeline;
 
   private static ExchangeTrade newTrade(double price, double volume) {
-    return ExchangeTrade.newBuilder().setPrice(price).setVolume(volume).build();
+    ExchangeTrade.Builder builder = ExchangeTrade.newBuilder();
+    builder.getTimestampBuilder().setSeconds(1);
+    return builder.setPrice(price).setVolume(volume).build();
   }
 
   @Before
