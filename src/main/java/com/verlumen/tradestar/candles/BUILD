@@ -45,12 +45,14 @@ java_library(
 )
 
 java_library(
-    name = "candles_module",
-    srcs = ["CandlesModule.java"],
+    name = "candle_aggregator_module",
+    srcs = ["CandleAggregatorModule.java"],
     deps = [
         ":candle_aggregator",
         ":candle_aggregator_impl",
+        "//:autovalue",
         "@maven//:com_google_inject_guice",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
     ],
 )
 
