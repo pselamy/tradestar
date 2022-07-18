@@ -57,8 +57,8 @@ public class CandleAggregatorTest {
   }
 
   @Test
-  public void aggregate_aggregatesCandles(
-      @TestParameter AggregateAggregatesCandlesTestCase testCase) throws Exception {
+  public void aggregate_aggregatesCandles(@TestParameter AggregatesCandlesTestCase testCase)
+      throws Exception {
     // Arrange
     testCase.instants.forEach(clock::addInstant);
     PCollection<ExchangeTrade> trades =
@@ -78,9 +78,7 @@ public class CandleAggregatorTest {
   }
 
   private void assertThatCandlesAreAggregated(
-      AggregateAggregatesCandlesTestCase testCase,
-      AggregateResult actual,
-      Granularity granularity) {
+      AggregatesCandlesTestCase testCase, AggregateResult actual, Granularity granularity) {
     PCollection<Candle> actualCandleCollection = actual.candles().get(granularity);
     ImmutableSet<Candle> expectedCandles =
         testCase.expected.getOrDefault(granularity, ImmutableSet.of());
@@ -102,7 +100,7 @@ public class CandleAggregatorTest {
   }
 
   @SuppressWarnings("unused")
-  private enum AggregateAggregatesCandlesTestCase {
+  private enum AggregatesCandlesTestCase {
     NO_CANDLES_NO_TRADES(ImmutableSet.of(), ImmutableSet.of(), ImmutableMap.of()),
     NO_CANDLES_ONE_TRADE(ImmutableSet.of(), ImmutableSet.of(newTrade(1, 1)), ImmutableMap.of());
 
@@ -111,7 +109,7 @@ public class CandleAggregatorTest {
     private final ImmutableMap<Granularity, ImmutableSet<Candle>> expected;
     private final ImmutableSet<Instant> instants;
 
-    AggregateAggregatesCandlesTestCase(
+    AggregatesCandlesTestCase(
         ImmutableSet<Candle> candles,
         ImmutableSet<ExchangeTrade> trades,
         ImmutableMap<Granularity, ImmutableSet<Candle>> expected) {
