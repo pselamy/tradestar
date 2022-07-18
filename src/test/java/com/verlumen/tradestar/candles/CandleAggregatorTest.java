@@ -58,7 +58,7 @@ public class CandleAggregatorTest {
   public void aggregate_aggregatesCandles(
       @TestParameter AggregateAggregatesCandlesTestCase testCase) throws Exception {
     // Arrange
-    testCase.instants.forEach(clock.instants()::offer);
+    testCase.instants.forEach(clock::addInstant);
     PCollection<ExchangeTrade> trades =
         createPCollection(testCase.trades, ProtoCoder.of(ExchangeTrade.class));
     FakeCandleService candleService = FakeCandleService.create(testCase.candles);
@@ -115,7 +115,7 @@ public class CandleAggregatorTest {
       this.candles = candles;
       this.trades = trades;
       this.expected = expected;
-      this.instants = ImmutableSet.of();
+      this.instants = ImmutableSet.of(Instant.now(), Instant.now().plusSeconds(60));
     }
   }
 
@@ -132,11 +132,11 @@ public class CandleAggregatorTest {
       return new AutoValue_CandleAggregatorTest_FakeClock(new LinkedList<>());
     }
 
+    abstract Queue<Instant> instants();
+
     void addInstant(Instant instant) {
       instants().add(instant);
     }
-
-    abstract Queue<Instant> instants();
 
     @Override
     public ZoneId getZone() {
