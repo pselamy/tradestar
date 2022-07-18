@@ -45,8 +45,8 @@ java_library(
 )
 
 java_library(
-    name = "candles_module",
-    srcs = ["CandlesModule.java"],
+    name = "candle_aggregator_module",
+    srcs = ["CandleAggregatorModule.java"],
     deps = [
         ":candle_aggregator",
         ":candle_aggregator_impl",

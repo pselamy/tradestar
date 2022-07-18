@@ -4,7 +4,7 @@ java_test(
     deps = [
         "//:autovalue",
         "//src/main/java/com/verlumen/tradestar/candles:candle_aggregator",
-        "//src/main/java/com/verlumen/tradestar/candles:candles_module",
+        "//src/main/java/com/verlumen/tradestar/candles:candle_aggregator_module",
         "//src/main/java/com/verlumen/tradestar/candles:constants",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",

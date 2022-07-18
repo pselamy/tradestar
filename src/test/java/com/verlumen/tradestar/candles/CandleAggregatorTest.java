@@ -23,24 +23,35 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(TestParameterInjector.class)
 public class CandleAggregatorTest {
   private CandleAggregator aggregator;
+  private Clock clock;
   private Pipeline pipeline;
   private Sleeper sleeper;
 
   @Before
   public void setup() {
+    Clock clock = Clock.fixed(Instant.parse("2018-01-01T00:00:00Z"), ZoneId.of("UTC"));
+    TestPipeline pipeline = TestPipeline.create();
+    FakeSleeper sleeper = FakeSleeper.create();
+
     this.aggregator =
-        Guice.createInjector(CandlesModule.TestModule.create(sleeper))
+        Guice.createInjector(CandleAggregatorModule.testModule(clock, sleeper))
             .getInstance(CandleAggregator.class);
-    this.pipeline = TestPipeline.create();
-    this.sleeper = FakeSleeper.create();
+    this.clock = clock;
+    this.pipeline = pipeline;
+    this.sleeper = sleeper;
   }
 
   @Test
@@ -109,6 +120,30 @@ public class CandleAggregatorTest {
   abstract static class FakeCandleService implements CandleAggregator.CandleService {
     private static FakeCandleService create(ImmutableSet<Candle> candles) {
       return new AutoValue_CandleAggregatorTest_FakeCandleService(candles);
+    }
+  }
+
+  @AutoValue
+  abstract static class FakeClock extends Clock {
+    private static FakeClock create(ImmutableSet<Instant> instants) {
+      return new AutoValue_CandleAggregatorTest_FakeClock(new LinkedList<>(instants));
+    }
+
+    abstract Queue<Instant> instants();
+
+    @Override
+    public ZoneId getZone() {
+      return ZoneId.of("UTC");
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return null;
+    }
+
+    @Override
+    public Instant instant() {
+      return instants().remove();
     }
   }
 
