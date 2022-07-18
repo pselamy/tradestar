@@ -38,7 +38,6 @@ public class CandleAggregatorTest {
   private CandleAggregator aggregator;
   private FakeClock clock;
   private Pipeline pipeline;
-  private Sleeper sleeper;
 
   @Before
   public void setup() {
@@ -51,7 +50,6 @@ public class CandleAggregatorTest {
             .getInstance(CandleAggregator.class);
     this.clock = clock;
     this.pipeline = pipeline;
-    this.sleeper = sleeper;
   }
 
   @Test
