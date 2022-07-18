@@ -74,7 +74,7 @@ class CandleAggregatorImpl implements CandleAggregator {
         historicalOneMinuteCandleAggregator.aggregate();
 
     PCollection<Candle> liveOneMinuteCandles =
-        applyWindow(params.trades(), window(ONE_MINUTE), new TradeTimestampFn())
+        applyWindow(params.liveTrades(), window(ONE_MINUTE), new TradeTimestampFn())
             .apply(ParDo.of(OneMinuteCandleFn.create(startTimeCalculator)))
             .apply(Wait.on(historicalOneMinuteCandles));
 
@@ -143,16 +143,17 @@ class CandleAggregatorImpl implements CandleAggregator {
     private ImmutableList<Candle> getCandles(DoFn<Iterable<Candle>, Candle>.ProcessContext c) {
       return ImmutableList.copyOf(firstNonNull(c.element(), ImmutableList.of()));
     }
-
   }
+
   private static class CandleTimestampFn
-          implements SerializableFunction<Candle, org.joda.time.Instant> {
+      implements SerializableFunction<Candle, org.joda.time.Instant> {
 
     @Override
     public org.joda.time.Instant apply(Candle candle) {
       return new org.joda.time.Instant(candle.getStart().getSeconds());
     }
   }
+
   @AutoValue
   abstract static class HistoricalOneMinuteCandleAggregator {
 
@@ -177,6 +178,7 @@ class CandleAggregatorImpl implements CandleAggregator {
     abstract Sleeper sleeper();
 
     abstract StartTimeCalculator startTimeCalculator();
+
     PCollection<Candle> aggregate() throws InterruptedException {
       Instant startTime = startTimeCalculator().calculateProcessingStartTime();
       while (clock().instant().isBefore(startTime)) {
@@ -186,7 +188,6 @@ class CandleAggregatorImpl implements CandleAggregator {
       ImmutableSet<Candle> candles = candleService().getCandles();
       return pipeline().apply(Create.of(candles).withCoder(ProtoCoder.of(Candle.class)));
     }
-
   }
 
   @AutoValue

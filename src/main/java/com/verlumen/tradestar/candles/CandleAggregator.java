@@ -37,7 +37,7 @@ public interface CandleAggregator {
     }
 
     @Memoized
-    PCollection<ExchangeTrade> trades() {
+    PCollection<ExchangeTrade> liveTrades() {
       return tradeService().getTrades();
     }
 
