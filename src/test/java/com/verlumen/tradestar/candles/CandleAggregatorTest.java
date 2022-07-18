@@ -100,7 +100,10 @@ public class CandleAggregatorTest {
   @SuppressWarnings("unused")
   private enum AggregateAggregatesCandlesTestCase {
     NO_CANDLES_NO_TRADES(ImmutableSet.of(), ImmutableSet.of(), ImmutableMap.of()),
-    NO_CANDLES_ONE_TRADE(ImmutableSet.of(), ImmutableSet.of(), ImmutableMap.of());
+    NO_CANDLES_ONE_TRADE(
+        ImmutableSet.of(),
+        ImmutableSet.of(ExchangeTrade.newBuilder().setVolume(1).setPrice(1).build()),
+        ImmutableMap.of());
 
     private final ImmutableSet<Candle> candles;
     private final ImmutableSet<ExchangeTrade> trades;
