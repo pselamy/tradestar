@@ -36,13 +36,13 @@ import static com.google.common.truth.Truth.assertThat;
 @RunWith(TestParameterInjector.class)
 public class CandleAggregatorTest {
   private CandleAggregator aggregator;
-  private Clock clock;
+  private FakeClock clock;
   private Pipeline pipeline;
   private Sleeper sleeper;
 
   @Before
   public void setup() {
-    Clock clock = Clock.fixed(Instant.parse("2018-01-01T00:00:00Z"), ZoneId.of("UTC"));
+    FakeClock clock = FakeClock.create();
     TestPipeline pipeline = TestPipeline.create();
     FakeSleeper sleeper = FakeSleeper.create();
 
@@ -125,8 +125,12 @@ public class CandleAggregatorTest {
 
   @AutoValue
   abstract static class FakeClock extends Clock {
-    private static FakeClock create(ImmutableSet<Instant> instants) {
-      return new AutoValue_CandleAggregatorTest_FakeClock(new LinkedList<>(instants));
+    private static FakeClock create() {
+      return new AutoValue_CandleAggregatorTest_FakeClock(new LinkedList<>());
+    }
+
+    void addInstant(Instant instant) {
+      instants().add(instant);
     }
 
     abstract Queue<Instant> instants();
