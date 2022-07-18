@@ -110,9 +110,7 @@ class CandleAggregatorImpl implements CandleAggregator {
     @ProcessElement
     public void processElement(ProcessContext c) {
       // One Minute Candles
-      ImmutableList<Candle> candles =
-          ImmutableList.copyOf(firstNonNull(c.element(), ImmutableList.of()));
-
+      ImmutableList<Candle> candles = getCandles(c);
       GranularitySpec granularitySpec = GranularitySpec.fromGranularity(granularity());
       int minutes = (int) granularitySpec.minutes();
       if (candles.size() != minutes) {
@@ -122,30 +120,28 @@ class CandleAggregatorImpl implements CandleAggregator {
       checkState(
           candles.stream()
               .allMatch(candle -> candle.getGranularity().equals(Granularity.ONE_MINUTE)));
-      Candle.Builder candleBuilder = Candle.newBuilder();
-      double open = candles.get(0).getOpen();
-      double high =
-          candles.stream()
-              .mapToDouble(Candle::getHigh)
-              .max()
-              .orElseThrow(IllegalStateException::new);
-      double low =
-          candles.stream()
-              .mapToDouble(Candle::getLow)
-              .min()
-              .orElseThrow(IllegalStateException::new);
-      double close = candles.get(minutes - 1).getClose();
-      double volume = candles.stream().mapToDouble(Candle::getVolume).sum();
 
       c.output(
-          candleBuilder
-              .setOpen(open)
-              .setClose(close)
-              .setHigh(high)
-              .setLow(low)
-              .setVolume(volume)
+          Candle.newBuilder()
+              .setOpen(candles.get(0).getOpen())
+              .setHigh(
+                  candles.stream()
+                      .mapToDouble(Candle::getHigh)
+                      .max()
+                      .orElseThrow(IllegalStateException::new))
+              .setLow(
+                  candles.stream()
+                      .mapToDouble(Candle::getLow)
+                      .min()
+                      .orElseThrow(IllegalStateException::new))
+              .setClose(candles.get(minutes - 1).getClose())
+              .setVolume(candles.stream().mapToDouble(Candle::getVolume).sum())
               .setGranularity(granularity())
               .build());
+    }
+
+    private ImmutableList<Candle> getCandles(DoFn<Iterable<Candle>, Candle>.ProcessContext c) {
+      return ImmutableList.copyOf(firstNonNull(c.element(), ImmutableList.of()));
     }
   }
 
